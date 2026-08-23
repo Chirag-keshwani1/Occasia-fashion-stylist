@@ -1,0 +1,56 @@
+services:
+  # ─────────────────────────────────────────────────────────────────────────
+  # MongoDB — local dev instance.
+  # Data is persisted in a named volume so it survives container restarts.
+  # ─────────────────────────────────────────────────────────────────────────
+  mongo:
+    image: mongo:7.0
+    container_name: smartfashion_mongo
+    restart: unless-stopped
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo_data:/data/db
+    environment:
+      MONGO_INITDB_DATABASE: smartfashion
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+
+  # ─────────────────────────────────────────────────────────────────────────
+  # Backend API
+  # ─────────────────────────────────────────────────────────────────────────
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: smartfashion_api
+    restart: unless-stopped
+    ports:
+      - "${PORT:-5000}:5000"
+    # Depends on mongo being healthy before starting
+    depends_on:
+      mongo:
+        condition: service_healthy
+    environment:
+      NODE_ENV: development
+      PORT: 5000
+      # Override MONGO_URI to use the Docker service name instead of localhost
+      MONGO_URI: mongodb://mongo:27017/smartfashion
+    env_file:
+      # All other variables (JWT secrets, GROQ_API_KEY, Cloudinary, etc.)
+      # are loaded from .env so they don't have to be hardcoded here.
+      - .env
+    volumes:
+      # Mount source code for hot-reload in development.
+      # Remove this volume binding for production to use the image's copy.
+      - .:/app
+      - /app/node_modules   # prevent the host node_modules from overriding the image's
+    command: npm run dev
+
+volumes:
+  mongo_data:
+    driver: local
