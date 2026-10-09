@@ -4,7 +4,6 @@ import * as orderController from "../controllers/orderController.js";
 import * as uploadController from "../controllers/uploadController.js";
 import * as analyticsController from "../controllers/analyticsController.js";
 import * as reviewController from "../controllers/reviewController.js";
-import * as couponController from "../controllers/couponController.js";
 import { requireAuth } from "../middleware/auth.js";
 import { requireRole } from "../middleware/rbac.js";
 import { validate, validateQuery } from "../middleware/validate.js";
@@ -61,11 +60,6 @@ router.get("/users", analyticsController.getUserList);
 // ── Review Moderation ────────────────────────────────────────────────────────
 // The service already supports isAdmin=true; this route just makes it reachable.
 router.delete("/reviews/:id", reviewController.deleteReview);
-
-// ── Coupon Management ────────────────────────────────────────────────────────
-router.get("/coupons", couponController.getCoupons);
-router.post("/coupons", couponController.createCoupon);
-router.patch("/coupons/:id/deactivate", couponController.deactivateCoupon);
 
 export default router;
 
