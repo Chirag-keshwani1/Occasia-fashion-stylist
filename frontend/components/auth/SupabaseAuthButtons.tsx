@@ -33,7 +33,7 @@ export function SupabaseAuthButtons() {
             signal: controller.signal
           });
           clearTimeout(timeoutId);
-        } catch (err) {
+        } catch (_err) {
           toast.error('Supabase project is currently paused or unreachable. Please restore your project in the Supabase Dashboard.');
           return;
         }
@@ -75,7 +75,7 @@ export function SupabaseAuthButtons() {
           const timeoutId = setTimeout(() => controller.abort(), 5000);
           await fetch(`${supabaseUrl}/auth/v1/health`, { method: 'GET', signal: controller.signal });
           clearTimeout(timeoutId);
-        } catch (err) {
+        } catch (_err) {
           toast.error('Supabase project is currently paused or unreachable. Please restore your project in the Supabase Dashboard.');
           return;
         }

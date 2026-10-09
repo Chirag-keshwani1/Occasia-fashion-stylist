@@ -54,8 +54,11 @@ export function VirtualTryOnModal({ productId, category }: VirtualTryOnModalProp
     formData.append('personImage', file);
     formData.append('productId', productId);
     try {
-      const response = await apiClient.post('/tryon/generate', formData);
-
+      const response = await apiClient.post('/tryon/generate', formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      });
       setResultUrl(response.data.data.resultImageUrl);
     } catch (err: unknown) {
       const axiosError = err as AxiosError<{message: string}>;

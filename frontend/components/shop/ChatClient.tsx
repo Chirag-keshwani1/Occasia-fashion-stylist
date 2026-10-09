@@ -142,7 +142,7 @@ export function ChatClient() {
                 <div className="flex items-center gap-2 mb-1">
                   <MessageSquareText className="h-4 w-4 shrink-0" />
                   <span className="truncate">
-                    {s.messages.length > 0 ? s.messages[0].content : 'New Conversation'}
+                    {s.messages && s.messages.length > 0 ? s.messages[0].content : 'New Conversation'}
                   </span>
                 </div>
                 <div className="flex items-center gap-1 text-xs opacity-70 ml-6">
