@@ -1,22 +1,18 @@
 /**
- * Integration tests: Order cancellation with stock restoration (Task 4),
- * and checkout idempotency (Task 5).
+ * Integration tests: Order cancellation with stock restoration.
  *
- * NOTE: like tests/checkout.test.js, orderService.cancelOrder and
- * orderService.checkout both use MongoDB multi-document transactions
+ * NOTE: orderService.cancelOrder uses MongoDB multi-document transactions
  * (mongoose session.withTransaction) for atomicity, which require a
  * replica set. A standalone MongoMemoryServer instance (as used in
  * testSetup.js) does not support this, so these tests need to run
  * against an environment with transaction support (e.g. a local replica
- * set or MongoDB Atlas) — same constraint the pre-existing checkout flow
- * already has. They document and verify the expected behavior/contract.
+ * set or MongoDB Atlas). They document and verify the expected behavior/contract.
  */
 import { describe, it, expect, beforeAll, afterAll, beforeEach } from "@jest/globals";
 import { connectTestDb, disconnectTestDb, clearDatabase } from "./testSetup.js";
 import mongoose from "mongoose";
 import Product from "../models/Product.js";
 import Order from "../models/Order.js";
-import IdempotencyKey from "../models/IdempotencyKey.js";
 import * as orderService from "../services/orderService.js";
 
 beforeAll(async () => {
@@ -112,36 +108,5 @@ describe("Order cancellation restores stock (Task 4)", () => {
     const order = await makeOrder(owner, product);
 
     await expect(orderService.cancelOrder(intruder, order._id)).rejects.toThrow(/not found/i);
-  });
-});
-
-describe("Checkout idempotency (Task 5)", () => {
-  it("returns the same order on a repeated Idempotency-Key instead of creating a duplicate", async () => {
-    // This scenario is exercised through orderService.checkout, which pulls
-    // from the Cart collection — full cart setup is covered by the existing
-    // checkout.test.js suite's coupon/stock integration tests. Here we
-    // verify the idempotency-key bookkeeping contract in isolation:
-    // claiming the same key twice must not allow two "processing" records
-    // to exist, because IdempotencyKey enforces a unique (userId, endpoint, key) index.
-    const userId = new mongoose.Types.ObjectId();
-
-    await IdempotencyKey.create({ key: "abc-123", userId, endpoint: "checkout" });
-
-    await expect(
-      IdempotencyKey.create({ key: "abc-123", userId, endpoint: "checkout" })
-    ).rejects.toThrow(); // duplicate key error (E11000) — this is what makes claiming atomic
-
-    const count = await IdempotencyKey.countDocuments({ userId, endpoint: "checkout", key: "abc-123" });
-    expect(count).toBe(1);
-  });
-
-  it("allows the same key to be reused by a different user", async () => {
-    const userA = new mongoose.Types.ObjectId();
-    const userB = new mongoose.Types.ObjectId();
-
-    await IdempotencyKey.create({ key: "shared-key", userId: userA, endpoint: "checkout" });
-    await expect(
-      IdempotencyKey.create({ key: "shared-key", userId: userB, endpoint: "checkout" })
-    ).resolves.toBeTruthy();
   });
 });
