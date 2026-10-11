@@ -12,10 +12,11 @@ export const getPersonalized = asyncHandler(async (req, res) => {
   sendResponse(res, HTTP_STATUS.OK, { products }, "Personalized recommendations fetched");
 });
 
-// GET /api/recommendations/similar/:productId
+// GET /api/recommendations/similar/:productId or /api/products/:id/similar
 export const getSimilar = asyncHandler(async (req, res) => {
   const limit = parseInt(req.query.limit) || 8;
-  const products = await recommendationService.getSimilarProducts(req.params.productId, limit);
+  const productId = req.params.productId || req.params.id;
+  const products = await recommendationService.getSimilarProducts(productId, limit);
   sendResponse(res, HTTP_STATUS.OK, { products }, "Similar products fetched");
 });
 
